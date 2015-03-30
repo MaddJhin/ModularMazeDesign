@@ -5,40 +5,27 @@ public class FloorMaker : MonoBehaviour {
 
 	public float yieldTest;
 
+	[Range (0,100)]
 	public int RotateChance, BacktrackChance;
-
 	[Range(0,100)]
 	public int TurnDirection;
+	[Range (1,100)]
 	public int SpawnRoomChance;
+	[Range (0,99)]
 	public int SpawnFloorMakerChance;
+	[Range (0,100)]
 	public int SelfDestroyChance;
 	public int MaxRooms;
 
 	public IntVector2 CurrentPossition;
-	public IntVector2 LevelSize;
+
 
 	public GameObject HallwayTile;
 	public GameObject[] RoomTiles;
 
 	public LevelManager Level;
-//	public FloorMaker FloorMakerPrefab;
-	
-//	public int CurrentRooms;
 
 	private bool SelfDestructed = false;
-
-	public IntVector2 RandomCoordinates 
-	{
-		get 
-		{
-			return new IntVector2 (Random.Range(0, LevelSize.x),Random.Range(0, LevelSize.z));
-		}
-	}
-	
-	public bool ContainsCoordinates (IntVector2 coordinates)
-	{
-		return coordinates.x >= 0 && coordinates.x <= LevelSize.x && coordinates.z >= 0 && coordinates.z <= LevelSize.z;
-	}
 
 	public IEnumerator GenerateLevel() {
 		while (Level.CurrentRooms < MaxRooms)
@@ -48,6 +35,9 @@ public class FloorMaker : MonoBehaviour {
 			SpawnFloormaker();
 			yield return new WaitForSeconds (yieldTest);
 		}
+		GameObject room  = Instantiate (RoomTiles[Random.Range(0, RoomTiles.Length)], transform.position, Quaternion.identity) as GameObject;
+		room.transform.parent = Level.transform;
+		Level.DropFoor();
 	}
 
 	public IEnumerator GenerateSideRooms() {
@@ -62,7 +52,7 @@ public class FloorMaker : MonoBehaviour {
 	}
 
 	void DropFloor(){
-		int roomRoll = Random.Range(0, 100);
+		int roomRoll = Random.Range(1, 101);
 		if (roomRoll <= SpawnRoomChance)
 		{
 			GameObject room  = Instantiate (RoomTiles[Random.Range(0, RoomTiles.Length)], transform.position, Quaternion.identity) as GameObject;
@@ -77,8 +67,8 @@ public class FloorMaker : MonoBehaviour {
 	}
 
 	void Move(){
-		int turnRoll = Random.Range(0, 200);
-		if (turnRoll < RotateChance)
+		int turnRoll = Random.Range(1, 201);
+		if (turnRoll <= RotateChance)
 		{
 			int turnDirectionRoll = Random.Range (0, 100);
 			if ( turnDirectionRoll < TurnDirection)
@@ -92,7 +82,7 @@ public class FloorMaker : MonoBehaviour {
 				transform.Translate (Vector3.forward);
 			}
 		}
-		else if (RotateChance < turnRoll && turnRoll <= (RotateChance + BacktrackChance))
+		else if (RotateChance > turnRoll && turnRoll <= (RotateChance + BacktrackChance))
 		{
 			transform.Rotate (0,180,0);
 			transform.Translate (Vector3.forward);
@@ -104,8 +94,8 @@ public class FloorMaker : MonoBehaviour {
 	}
 
 	void SpawnFloormaker(){
-		int spawnRoll = Random.Range (0, 100);
-		if (spawnRoll < SpawnFloorMakerChance)
+		int spawnRoll = Random.Range (1, 101);
+		if (spawnRoll <= SpawnFloorMakerChance && Level.CurrentFloorMakers < Level.MaxFloorMakers)
 		{
 			Vector3 coordinates = transform.position;
 			Level.SpawnFloormakerCopy(coordinates);
@@ -113,13 +103,14 @@ public class FloorMaker : MonoBehaviour {
 	}
 
 	void SelfDestruct (){
-		int destroyRoll = Random.Range (0, 100);
-		if (destroyRoll < SelfDestroyChance)
+		int destroyRoll = Random.Range (1, 101);
+		if (destroyRoll <= SelfDestroyChance)
 		{
 			GameObject room  = Instantiate (RoomTiles[Random.Range(0, RoomTiles.Length)], transform.position, Quaternion.identity) as GameObject;
 			room.transform.parent = Level.transform;
 			SelfDestructed = true;
 			Destroy(gameObject);
+			Level.CurrentFloorMakers--;
 		}
 	}
 	
